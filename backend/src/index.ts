@@ -2,11 +2,40 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
+import bcrypt from 'bcryptjs';
+import { prisma } from './lib/prisma';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Seed default admin user on first startup
+async function seedDatabase() {
+    try {
+        const adminEmail = process.env.DEFAULT_ADMIN_EMAIL || 'admin@example.com';
+        const adminPassword = process.env.DEFAULT_ADMIN_PASSWORD || 'admin123';
+
+        const existingAdmin = await prisma.user.findFirst({
+            where: { role: 'ADMIN' }
+        });
+
+        if (!existingAdmin) {
+            const hashedPassword = await bcrypt.hash(adminPassword, 10);
+            await prisma.user.create({
+                data: {
+                    email: adminEmail,
+                    password: hashedPassword,
+                    role: 'ADMIN'
+                }
+            });
+            console.log(`Default admin user created: ${adminEmail}`);
+            console.log('IMPORTANT: Change the default password after first login!');
+        }
+    } catch (error) {
+        console.error('Error seeding database:', error);
+    }
+}
 
 import authRoutes from './routes/auth';
 import templateRoutes from './routes/templates';
@@ -69,8 +98,9 @@ app.get('/', (req, res) => {
 
 import { startCleanupJob } from './jobs/cleanup';
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
     console.log(`Server running on port ${PORT}`);
+    await seedDatabase();
     startCleanupJob();
 });
 
