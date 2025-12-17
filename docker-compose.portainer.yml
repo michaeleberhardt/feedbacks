@@ -6,8 +6,8 @@
 #   VITE_API_URL    - Public URL to backend API (e.g., http://your-server-ip:3001)
 #
 # Optional Environment Variables:
-#   BACKEND_PORT    - Backend port (default: 3001)
-#   FRONTEND_PORT   - Frontend port (default: 80)
+#   BACKEND_PORT    - Backend port (default: 3070)
+#   FRONTEND_PORT   - Frontend port (default: 8070)
 
 version: '3.8'
 
@@ -22,7 +22,7 @@ services:
     container_name: feedbacks-backend
     restart: unless-stopped
     ports:
-      - "${BACKEND_PORT:-3001}:3001"
+      - "${BACKEND_PORT:-3070}:3001"
     environment:
       - NODE_ENV=production
       - PORT=3001
@@ -48,11 +48,11 @@ services:
       context: https://github.com/michaeleberhardt/feedbacks.git#master:frontend
       dockerfile: Dockerfile
       args:
-        VITE_API_URL: ${VITE_API_URL:-http://localhost:3001}
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3070}
     container_name: feedbacks-frontend
     restart: unless-stopped
     ports:
-      - "${FRONTEND_PORT:-80}:80"
+      - "${FRONTEND_PORT:-8070}:80"
     depends_on:
       backend:
         condition: service_healthy
