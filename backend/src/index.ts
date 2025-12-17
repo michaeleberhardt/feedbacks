@@ -10,9 +10,10 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Seed default admin user on first startup
+// Seed default admin user and templates on first startup
 async function seedDatabase() {
     try {
+        // Seed admin user
         const adminEmail = process.env.DEFAULT_ADMIN_EMAIL || 'admin@example.com';
         const adminPassword = process.env.DEFAULT_ADMIN_PASSWORD || 'admin123';
 
@@ -31,6 +32,54 @@ async function seedDatabase() {
             });
             console.log(`Default admin user created: ${adminEmail}`);
             console.log('IMPORTANT: Change the default password after first login!');
+        }
+
+        // Seed default templates
+        const templateCount = await prisma.template.count();
+        if (templateCount === 0) {
+            console.log('Seeding default templates...');
+
+            await prisma.template.create({
+                data: {
+                    title: "Customer Satisfaction Survey",
+                    internalName: "customer-satisfaction",
+                    introText: "We value your feedback! Please take a moment to rate our service.",
+                    htmlDesign: "<style>.survey-container { font-family: 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; }</style>",
+                    emailSubject: "Feedback Request: {reference}",
+                    emailBody: "<p>Dear Customer,</p><p>We would appreciate your feedback. Please click the link below to complete a short survey.</p><p><a href=\"{link}\">Take Survey</a></p><p>Thank you!</p>",
+                    commentLabel: "Additional Comments",
+                    submitButtonLabel: "Submit Feedback",
+                    questions: {
+                        create: [
+                            { text: "How satisfied were you with our service today?" },
+                            { text: "How likely are you to recommend us to a friend?" },
+                            { text: "How would you rate the quality of our product/service?" }
+                        ]
+                    }
+                }
+            });
+
+            await prisma.template.create({
+                data: {
+                    title: "Employee Performance Review",
+                    internalName: "employee-review",
+                    introText: "Please provide your feedback on the employee's performance.",
+                    htmlDesign: "<style>.survey-container { font-family: 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; }</style>",
+                    emailSubject: "Performance Review Request: {reference}",
+                    emailBody: "<p>Hello,</p><p>You have been asked to provide feedback. Please click below to complete the review.</p><p><a href=\"{link}\">Complete Review</a></p>",
+                    commentLabel: "Additional Feedback",
+                    submitButtonLabel: "Submit Review",
+                    questions: {
+                        create: [
+                            { text: "How would you rate the employee's communication skills?" },
+                            { text: "How would you rate the employee's work quality?" },
+                            { text: "How would you rate the employee's teamwork?" }
+                        ]
+                    }
+                }
+            });
+
+            console.log('Default templates created.');
         }
     } catch (error) {
         console.error('Error seeding database:', error);
