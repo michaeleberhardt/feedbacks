@@ -19,6 +19,18 @@
         "src/**/*"
     ],
     "exclude": [
-        "node_modules"
+        "node_modules",
+        "src/seed.ts",
+        "src/backfill_scores.ts",
+        "src/check_admin.ts",
+        "src/check_settings.ts",
+        "src/clear_db.ts",
+        "src/fix_logo.ts",
+        "src/set_app_url.ts",
+        "src/test_email.ts",
+        "src/test_retrigger_content.ts",
+        "src/verify_api_full.ts",
+        "src/verify_cleanup.ts",
+        "src/verify_full_flow.ts"
     ]
 }
