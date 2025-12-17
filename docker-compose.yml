@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  # ============================================
+  # Backend API Service
+  # ============================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: feedbacks-backend
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT:-3001}:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - DATABASE_URL=file:/app/data/feedbacks.db
+      - JWT_SECRET=${JWT_SECRET:-change-me-in-production-use-strong-secret}
+    volumes:
+      # Persist SQLite database
+      - feedbacks-data:/app/data
+      # Persist uploaded files
+      - feedbacks-uploads:/app/uploads
+    networks:
+      - feedbacks-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ============================================
+  # Frontend Web Service
+  # ============================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # API URL that will be baked into the frontend build
+        # For production, this should be the public URL of your backend
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3001}
+    container_name: feedbacks-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - feedbacks-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+# ============================================
+# Named Volumes for Data Persistence
+# ============================================
+volumes:
+  feedbacks-data:
+    name: feedbacks-data
+  feedbacks-uploads:
+    name: feedbacks-uploads
+
+# ============================================
+# Network Configuration
+# ============================================
+networks:
+  feedbacks-network:
+    name: feedbacks-network
+    driver: bridge

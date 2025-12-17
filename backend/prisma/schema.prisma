@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  role      String   @default("USER") // 'ADMIN', 'USER'
+  createdAt DateTime @default(now())
+}
+
+model SystemSetting {
+  key   String @id
+  value String
+}
+
+model Template {
+  id         String     @id @default(uuid())
+  title      String     @default("Feedback Request")
+  internalName String?
+  introText  String
+  logoUrl    String?
+  htmlDesign String
+  emailSubject String @default("Feedback Request: {reference}")
+  emailBody    String @default("<div><p>Please provide your feedback.</p><p><a href=\"{link}\">Click here</a></p></div>")
+  commentLabel String? @default("Additional Comments")
+  submitButtonLabel String? @default("Submit Feedback")
+  createdAt  DateTime   @default(now())
+  questions  Question[]
+  surveys    Survey[]
+}
+
+model Question {
+  id         String   @id @default(uuid())
+  templateId String
+  template   Template @relation(fields: [templateId], references: [id])
+  text       String
+  answers    Answer[]
+}
+
+model Survey {
+  id             String   @id @default(uuid())
+  templateId     String
+  template       Template @relation(fields: [templateId], references: [id])
+  reference      String?
+  employee       String?
+  addresseeEmail String
+  status         String   @default("open") // 'open', 'answered'
+  comment        String?
+  averageScore   Float?
+  createdAt      DateTime @default(now())
+  answers        Answer[]
+}
+
+model Answer {
+  id         String   @id @default(uuid())
+  surveyId   String
+  survey     Survey   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id])
+  value      Int
+}
+
+model EmailLog {
+  id          String   @id @default(uuid())
+  surveyId    String?
+  recipient   String
+  subject     String
+  status      String   // 'SUCCESS' or 'ERROR'
+  errorDetails String?
+  createdAt   DateTime @default(now())
+}
+
+model ApiKey {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  name      String
+  lastUsed  DateTime?
+  createdAt DateTime @default(now())
+}
