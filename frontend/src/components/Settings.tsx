@@ -57,7 +57,7 @@ function CustomTabPanel(props: TabPanelProps) {
 
 const Settings: React.FC = () => {
     const [value, setValue] = useState(0);
-    const [smtp, setSmtp] = useState({ host: '', port: '', user: '', pass: '', secure: 'false', tls_reject: 'true', app_url: '' });
+    const [smtp, setSmtp] = useState({ host: '', port: '', user: '', pass: '', secure: 'false', tls_reject: 'true', app_url: '', sender_name: '' });
     const [testEmail, setTestEmail] = useState('');
     const [users, setUsers] = useState<User[]>([]);
     const [openUser, setOpenUser] = useState(false);
@@ -194,6 +194,14 @@ const Settings: React.FC = () => {
                     <TextField fullWidth label="Port" margin="normal" value={smtp.port} onChange={(e) => setSmtp({ ...smtp, port: e.target.value })} />
                     <TextField fullWidth label="User" margin="normal" value={smtp.user} onChange={(e) => setSmtp({ ...smtp, user: e.target.value })} />
                     <TextField fullWidth label="Password" type="password" margin="normal" value={smtp.pass} onChange={(e) => setSmtp({ ...smtp, pass: e.target.value })} />
+                    <TextField
+                        fullWidth
+                        label="Sender Name"
+                        margin="normal"
+                        value={smtp.sender_name || ''}
+                        onChange={(e) => setSmtp({ ...smtp, sender_name: e.target.value })}
+                        helperText="Display name for outgoing emails (e.g. 'Feedback System')"
+                    />
 
                     <FormControlLabel
                         control={<Checkbox checked={smtp.secure === 'true'} onChange={(e) => setSmtp({ ...smtp, secure: String(e.target.checked) })} />}

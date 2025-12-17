@@ -15,8 +15,8 @@ export const sendEmail = async ({ to, subject, body, text, surveyId }: SendEmail
     // Fetch settings from DB
     const settings = await prisma.systemSetting.findMany({
         where: {
-            // Keys: host, port, user, pass, secure, tls_reject
-            key: { in: ['host', 'port', 'user', 'pass', 'secure', 'tls_reject'] }
+            // Keys: host, port, user, pass, secure, tls_reject, sender_name
+            key: { in: ['host', 'port', 'user', 'pass', 'secure', 'tls_reject', 'sender_name'] }
         }
     });
 
@@ -56,8 +56,9 @@ export const sendEmail = async ({ to, subject, body, text, surveyId }: SendEmail
 
     try {
         await transporter.verify();
+        const senderName = config.sender_name || config.user.split('@')[0];
         await transporter.sendMail({
-            from: `"${config.user.split('@')[0]}" <${config.user}>`, // Format: "Name" <email>
+            from: `"${senderName}" <${config.user}>`, // Format: "Name" <email>
             to: to,
             subject: subject,
             html: body,
