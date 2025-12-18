@@ -161,49 +161,59 @@ const Settings: React.FC = () => {
         setValue(newValue);
     };
 
-    const copyToClipboard = (text: string) => {
+    const copyToClipboard = async (text: string) => {
         console.log('copyToClipboard called with:', text);
 
-        // Create a temporary input element
-        const input = document.createElement('input');
-        input.setAttribute('value', text);
-        input.setAttribute('readonly', '');
-        input.style.position = 'absolute';
-        input.style.left = '-9999px';
-        document.body.appendChild(input);
-
-        // Select the text
-        input.select();
-        input.setSelectionRange(0, 99999); // For mobile devices
-
-        let success = false;
-        try {
-            success = document.execCommand('copy');
-            console.log('execCommand result:', success);
-        } catch (err) {
-            console.error('execCommand failed:', err);
-        }
-
-        document.body.removeChild(input);
-
-        if (success) {
-            setCopySuccess(true);
-            setTimeout(() => setCopySuccess(false), 2000);
-        } else {
-            // Try clipboard API as fallback
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(text).then(() => {
-                    console.log('Clipboard API success');
-                    setCopySuccess(true);
-                    setTimeout(() => setCopySuccess(false), 2000);
-                }).catch((err) => {
-                    console.error('Clipboard API failed:', err);
-                    alert('Copy failed. Please select and copy manually.');
-                });
-            } else {
-                alert('Copy failed. Please select and copy manually.');
+        // Method 1: Try modern Clipboard API first (most reliable)
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            try {
+                await navigator.clipboard.writeText(text);
+                console.log('Clipboard API succeeded');
+                setCopySuccess(true);
+                setTimeout(() => setCopySuccess(false), 2000);
+                return;
+            } catch (err) {
+                console.log('Clipboard API failed, trying fallback:', err);
             }
         }
+
+        // Method 2: Fallback using textarea (more compatible than input)
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        // Make it visible but small - some browsers don't copy from hidden elements
+        textarea.style.position = 'fixed';
+        textarea.style.top = '0';
+        textarea.style.left = '0';
+        textarea.style.width = '1px';
+        textarea.style.height = '1px';
+        textarea.style.padding = '0';
+        textarea.style.border = 'none';
+        textarea.style.outline = 'none';
+        textarea.style.boxShadow = 'none';
+        textarea.style.background = 'transparent';
+        textarea.style.opacity = '0.01';
+        document.body.appendChild(textarea);
+
+        textarea.focus();
+        textarea.select();
+
+        try {
+            const result = document.execCommand('copy');
+            console.log('execCommand result:', result);
+            if (result) {
+                setCopySuccess(true);
+                setTimeout(() => setCopySuccess(false), 2000);
+            } else {
+                // execCommand returned false - show manual copy prompt
+                window.prompt('Copy this API key:', text);
+            }
+        } catch (err) {
+            console.error('execCommand error:', err);
+            // Last resort - show prompt dialog for manual copy
+            window.prompt('Copy this API key:', text);
+        }
+
+        document.body.removeChild(textarea);
     };
 
     return (

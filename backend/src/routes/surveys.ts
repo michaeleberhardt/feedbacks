@@ -126,7 +126,7 @@ router.post('/:id/retrigger', authenticateToken, async (req, res) => {
 router.get('/', authenticateToken, authorizeRole('ADMIN'), async (req, res) => {
     const { ref, employee, status, startDate, endDate } = req.query;
 
-    console.log('[Surveys GET] Filters:', { ref, employee, status, startDate, endDate });
+    console.log('[Surveys GET v2] Filters:', { ref, employee, status, startDate, endDate });
 
     // Build filter conditions as an array for AND
     const conditions: any[] = [];
