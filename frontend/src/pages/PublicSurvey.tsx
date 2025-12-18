@@ -53,7 +53,7 @@ const PublicSurvey: React.FC = () => {
         return (
             <Container maxWidth="sm" sx={{ mt: 8 }}>
                 <Alert severity="success">
-                    Thank you! Your feedback has been submitted successfully.
+                    {survey?.template?.thankYouMessage || 'Thank you! Your feedback has been submitted successfully.'}
                 </Alert>
             </Container>
         );

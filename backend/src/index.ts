@@ -49,6 +49,7 @@ async function seedDatabase() {
                     emailBody: "<p>Dear Customer,</p><p>We would appreciate your feedback. Please click the link below to complete a short survey.</p><p><a href=\"{link}\">Take Survey</a></p><p>Thank you!</p>",
                     commentLabel: "Additional Comments",
                     submitButtonLabel: "Submit Feedback",
+                    thankYouMessage: "Thank you for your feedback! We appreciate you taking the time to share your thoughts with us.",
                     questions: {
                         create: [
                             { text: "How satisfied were you with our service today?" },
@@ -69,6 +70,7 @@ async function seedDatabase() {
                     emailBody: "<p>Hello,</p><p>You have been asked to provide feedback. Please click below to complete the review.</p><p><a href=\"{link}\">Complete Review</a></p>",
                     commentLabel: "Additional Feedback",
                     submitButtonLabel: "Submit Review",
+                    thankYouMessage: "Thank you for completing this review! Your feedback is valuable for employee development.",
                     questions: {
                         create: [
                             { text: "How would you rate the employee's communication skills?" },

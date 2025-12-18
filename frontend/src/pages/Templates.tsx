@@ -73,6 +73,7 @@ const Templates: React.FC = () => {
         emailBody: string;
         commentLabel: string;
         submitButtonLabel: string;
+        thankYouMessage: string;
         questions: string[];
     }>({
         title: 'Feedback Request',
@@ -84,6 +85,7 @@ const Templates: React.FC = () => {
         emailBody: '<div><p>Please provide your feedback.</p><p><a href="{link}">Click here</a></p></div>',
         commentLabel: 'Additional Comments',
         submitButtonLabel: 'Submit Feedback',
+        thankYouMessage: 'Thank you! Your feedback has been submitted successfully.',
         questions: []
     });
     const [newQuestion, setNewQuestion] = useState('');
@@ -124,6 +126,7 @@ const Templates: React.FC = () => {
                 emailBody: '<div><p>Please provide your feedback.</p><p><a href="{link}">Click here</a></p></div>',
                 commentLabel: 'Additional Comments',
                 submitButtonLabel: 'Submit Feedback',
+                thankYouMessage: 'Thank you! Your feedback has been submitted successfully.',
                 questions: []
             });
             loadTemplates();
@@ -144,6 +147,7 @@ const Templates: React.FC = () => {
             emailBody: template.emailBody || '<div><p>Please provide your feedback.</p><p><a href="{link}">Click here</a></p></div>',
             commentLabel: template.commentLabel || 'Additional Comments',
             submitButtonLabel: template.submitButtonLabel || 'Submit Feedback',
+            thankYouMessage: template.thankYouMessage || 'Thank you! Your feedback has been submitted successfully.',
             questions: template.questions.map(q => q.text)
         });
         setEditingId(template.id);
@@ -211,6 +215,7 @@ const Templates: React.FC = () => {
                         emailBody: '<div><p>Please provide your feedback.</p><p><a href="{link}">Click here</a></p></div>',
                         commentLabel: 'Additional Comments',
                         submitButtonLabel: 'Submit Feedback',
+                        thankYouMessage: 'Thank you! Your feedback has been submitted successfully.',
                         questions: []
                     });
                     setOpen(true);
@@ -259,6 +264,7 @@ const Templates: React.FC = () => {
                     emailBody: '<div><p>Please provide your feedback.</p><p><a href="{link}">Click here</a></p></div>',
                     commentLabel: 'Additional Comments',
                     submitButtonLabel: 'Submit Feedback',
+                    thankYouMessage: 'Thank you! Your feedback has been submitted successfully.',
                     questions: []
                 });
             }} maxWidth="md" fullWidth>
@@ -369,7 +375,7 @@ const Templates: React.FC = () => {
                     </Box>
 
                     <Box sx={{ mt: 2, p: 2, border: '1px solid #ddd', borderRadius: 1 }}>
-                        <Typography variant="subtitle2" gutterBottom>Labels</Typography>
+                        <Typography variant="subtitle2" gutterBottom>Labels & Messages</Typography>
                         <TextField
                             margin="dense"
                             label="Comment Field Label"
@@ -383,6 +389,16 @@ const Templates: React.FC = () => {
                             fullWidth
                             value={newTemplate.submitButtonLabel}
                             onChange={(e) => setNewTemplate({ ...newTemplate, submitButtonLabel: e.target.value })}
+                        />
+                        <TextField
+                            margin="dense"
+                            label="Thank You Message"
+                            fullWidth
+                            multiline
+                            rows={2}
+                            value={newTemplate.thankYouMessage}
+                            onChange={(e) => setNewTemplate({ ...newTemplate, thankYouMessage: e.target.value })}
+                            helperText="Displayed after survey submission"
                         />
                     </Box>
 
@@ -430,6 +446,7 @@ const Templates: React.FC = () => {
                             emailBody: '<div><p>Please provide your feedback.</p><p><a href="{link}">Click here</a></p></div>',
                             commentLabel: 'Additional Comments',
                             submitButtonLabel: 'Submit Feedback',
+                            thankYouMessage: 'Thank you! Your feedback has been submitted successfully.',
                             questions: []
                         });
                     }}>Cancel</Button>

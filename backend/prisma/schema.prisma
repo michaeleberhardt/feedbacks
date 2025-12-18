@@ -31,6 +31,7 @@ model Template {
   emailBody    String @default("<div><p>Please provide your feedback.</p><p><a href=\"{link}\">Click here</a></p></div>")
   commentLabel String? @default("Additional Comments")
   submitButtonLabel String? @default("Submit Feedback")
+  thankYouMessage String? @default("Thank you! Your feedback has been submitted successfully.")
   createdAt  DateTime   @default(now())
   questions  Question[]
   surveys    Survey[]

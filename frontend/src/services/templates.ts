@@ -11,6 +11,7 @@ export interface Template {
     emailBody: string;
     commentLabel?: string;
     submitButtonLabel?: string;
+    thankYouMessage?: string;
     questions: { id: string; text: string }[];
 }
 
