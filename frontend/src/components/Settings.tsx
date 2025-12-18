@@ -160,9 +160,22 @@ const Settings: React.FC = () => {
         setValue(newValue);
     };
 
-    const copyToClipboard = (text: string) => {
-        navigator.clipboard.writeText(text);
-        alert('Copied to clipboard!');
+    const copyToClipboard = async (text: string) => {
+        try {
+            await navigator.clipboard.writeText(text);
+            alert('Copied to clipboard!');
+        } catch (err) {
+            // Fallback for older browsers or non-HTTPS
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            alert('Copied to clipboard!');
+        }
     };
 
     return (
@@ -321,7 +334,7 @@ const Settings: React.FC = () => {
             </Dialog>
 
             {/* ADD API KEY DIALOG */}
-            <Dialog open={openApiKey} onClose={() => setOpenApiKey(false)}>
+            <Dialog open={openApiKey} onClose={() => setOpenApiKey(false)} maxWidth="sm" fullWidth>
                 <DialogTitle>Create API Key</DialogTitle>
                 <DialogContent>
                     {!createdKey ? (
@@ -335,8 +348,16 @@ const Settings: React.FC = () => {
                             <Alert severity="success" sx={{ mb: 2 }}>
                                 API Key Created! Copy it now, you won't see it again.
                             </Alert>
-                            <Paper variant="outlined" sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: 'grey.100' }}>
-                                <Typography variant="body1" sx={{ fontFamily: 'monospace', fontWeight: 'bold' }}>
+                            <Paper variant="outlined" sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2, bgcolor: 'grey.100' }}>
+                                <Typography
+                                    variant="body1"
+                                    sx={{
+                                        fontFamily: 'monospace',
+                                        fontWeight: 'bold',
+                                        wordBreak: 'break-all',
+                                        flex: 1
+                                    }}
+                                >
                                     {createdKey}
                                 </Typography>
                                 <Tooltip title="Copy to clipboard">
