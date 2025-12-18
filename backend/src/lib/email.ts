@@ -1,5 +1,6 @@
 import { prisma } from './prisma';
 import nodemailer from 'nodemailer';
+import { logError, logInfo, logWarn } from './logger';
 
 interface SendEmailOptions {
     to: string;
@@ -10,7 +11,7 @@ interface SendEmailOptions {
 }
 
 export const sendEmail = async ({ to, subject, body, text, surveyId }: SendEmailOptions) => {
-    console.log(`[Email] Sending to: ${to}, Subject: ${subject}`);
+    logInfo('email', 'Sending email', { to, subject, surveyId });
 
     // Fetch settings from DB
     const settings = await prisma.systemSetting.findMany({
@@ -24,7 +25,7 @@ export const sendEmail = async ({ to, subject, body, text, surveyId }: SendEmail
 
     // VALIDATION
     if (!config.host || !config.user) {
-        console.error('[Email] FAILED: Missing SMTP configuration (Host or User).');
+        logError('email', 'Missing SMTP configuration (Host or User)', { to, subject, surveyId });
         await logEmailResult(to, subject, false, 'Missing SMTP configuration', surveyId);
         return false;
     }
@@ -32,9 +33,7 @@ export const sendEmail = async ({ to, subject, body, text, surveyId }: SendEmail
     const secure = config.secure === 'true';
     const rejectUnauthorized = config.tls_reject !== 'false';
 
-    console.log(`[Email] Configured Host: ${config.host}, Port: ${config.port}, Secure: ${secure}`);
-
-    // Create transporter
+    // Create transporter with timeouts
     const transporter = nodemailer.createTransport({
         host: config.host,
         port: parseInt(config.port || '587'),
@@ -45,7 +44,10 @@ export const sendEmail = async ({ to, subject, body, text, surveyId }: SendEmail
         },
         tls: {
             rejectUnauthorized: rejectUnauthorized
-        }
+        },
+        connectionTimeout: 10000, // 10 seconds to connect
+        greetingTimeout: 10000,   // 10 seconds for greeting
+        socketTimeout: 30000      // 30 seconds for socket inactivity
     });
 
     let success = false;
@@ -71,11 +73,11 @@ export const sendEmail = async ({ to, subject, body, text, surveyId }: SendEmail
             }
         });
         success = true;
-        console.log('[Email] Sent successfully via SMTP');
+        logInfo('email', 'Email sent successfully', { to, subject, surveyId });
     } catch (error: any) {
-        console.error('[Email] Failed to send:', error);
         success = false;
         errorDetails = error.message || 'Unknown SMTP error';
+        logError('email', 'Failed to send email', { to, subject, surveyId, error: errorDetails });
     }
 
     await logEmailResult(to, subject, success, errorDetails, surveyId);

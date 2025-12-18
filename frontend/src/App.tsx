@@ -10,6 +10,7 @@ import PublicSurvey from './pages/PublicSurvey';
 // import Settings from './pages/Settings';
 import Settings from './components/Settings';
 import EmailLogs from './pages/EmailLogs';
+import SystemInfo from './pages/SystemInfo';
 
 function App() {
   // Force HMR update
@@ -24,6 +25,7 @@ function App() {
               <Route path="templates" element={<Templates />} />
               <Route path="settings" element={<Settings />} />
               <Route path="logs" element={<EmailLogs />} />
+              <Route path="info" element={<SystemInfo />} />
             </Route>
             <Route path="/survey/:id" element={<PublicSurvey />} />
             <Route path="/" element={<Login />} />

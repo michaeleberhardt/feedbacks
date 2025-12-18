@@ -11,7 +11,8 @@ router.get('/', authenticateToken, authorizeRole('ADMIN'), async (req, res) => {
             include: { questions: true }
         });
         res.json(templates);
-    } catch (error) {
+    } catch (error: any) {
+        console.error('[Templates GET] Error:', error.message);
         res.status(500).json({ message: 'Error fetching templates' });
     }
 });
@@ -39,7 +40,8 @@ router.post('/', authenticateToken, authorizeRole('ADMIN'), async (req, res) => 
             include: { questions: true }
         });
         res.json(template);
-    } catch (error) {
+    } catch (error: any) {
+        console.error('[Templates POST] Error creating template:', error.message);
         res.status(500).json({ message: 'Error creating template' });
     }
 });

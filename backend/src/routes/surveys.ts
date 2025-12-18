@@ -2,6 +2,7 @@ import express from 'express';
 import { prisma } from '../lib/prisma';
 import { authenticateToken, authorizeRole, authenticateTokenOrApiKey } from '../middleware/auth';
 import { sendEmail } from '../lib/email';
+import { logError, logInfo } from '../lib/logger';
 
 const router = express.Router();
 
@@ -79,16 +80,29 @@ router.post('/', authenticateTokenOrApiKey, async (req, res) => {
 
         const plainText = bodyContent.replace(/<[^>]*>?/gm, '').trim() + `\n\nTo participate, please visit:\n${surveyLink}`;
 
-        await sendEmail({
+        // Send email asynchronously (fire-and-forget) to not block API response
+        sendEmail({
             to: addresseeEmail,
             subject: subject,
             body: finalHtml,
             text: plainText,
             surveyId: survey.id
+        }).catch(err => {
+            logError('email', 'Failed to send survey email', {
+                surveyId: survey.id,
+                recipient: addresseeEmail,
+                error: err.message
+            });
         });
 
+        logInfo('surveys', 'Survey created', { surveyId: survey.id, reference, addresseeEmail });
         res.json(survey);
-    } catch (error) {
+    } catch (error: any) {
+        logError('surveys', 'Error creating survey', {
+            error: error.message,
+            stack: error.stack,
+            body: req.body
+        });
         res.status(500).json({ message: 'Error creating survey' });
     }
 });
@@ -202,8 +216,11 @@ router.get('/', authenticateToken, authorizeRole('ADMIN'), async (req, res) => {
             }
         });
         res.json(surveys);
-    } catch (error) {
-        console.error(error);
+    } catch (error: any) {
+        logError('surveys', 'Error fetching surveys', {
+            error: error.message,
+            query: req.query
+        });
         res.status(500).json({ message: 'Error fetching surveys' });
     }
 });
@@ -257,8 +274,11 @@ router.get('/stats', authenticateToken, authorizeRole('ADMIN'), async (req, res)
             quarter: quarterStats._avg.averageScore || 0,
             month: monthStats._avg.averageScore || 0
         });
-    } catch (error) {
-        console.error(error);
+    } catch (error: any) {
+        logError('surveys', 'Error fetching stats', {
+            error: error.message,
+            query: req.query
+        });
         res.status(500).json({ message: 'Error fetching stats' });
     }
 });
@@ -283,7 +303,11 @@ router.get('/:id/public', async (req, res) => {
             reference: survey.reference,
             template: survey.template
         });
-    } catch (error) {
+    } catch (error: any) {
+        logError('surveys', 'Error fetching public survey', {
+            error: error.message,
+            surveyId: req.params.id
+        });
         res.status(500).json({ message: 'Error fetching survey' });
     }
 });
@@ -329,9 +353,13 @@ router.post('/:id/submit', async (req, res) => {
             });
         });
 
+        logInfo('surveys', 'Survey submitted', { surveyId: id });
         res.json({ message: 'Feedback submitted successfully' });
-    } catch (error) {
-        console.error(error);
+    } catch (error: any) {
+        logError('surveys', 'Error submitting feedback', {
+            error: error.message,
+            surveyId: id
+        });
         res.status(500).json({ message: 'Error submitting feedback' });
     }
 });

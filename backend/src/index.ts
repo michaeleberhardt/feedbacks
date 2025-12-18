@@ -1,11 +1,26 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
 import { prisma } from './lib/prisma';
+import { logError } from './lib/logger';
 
 dotenv.config();
+
+// Process-level error handlers to prevent server hangs
+process.on('uncaughtException', (error) => {
+    console.error('[FATAL] Uncaught Exception:', error);
+    logError('system', 'Uncaught Exception', { error: error.message, stack: error.stack });
+    // Give time for logs to flush before exit
+    setTimeout(() => process.exit(1), 1000);
+});
+
+process.on('unhandledRejection', (reason: any, promise) => {
+    console.error('[ERROR] Unhandled Rejection at:', promise, 'reason:', reason);
+    logError('system', 'Unhandled Rejection', { reason: reason?.message || String(reason) });
+    // Don't exit, but log for debugging
+});
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -147,9 +162,58 @@ app.get('/', (req, res) => {
     res.send('Customer Feedback API');
 });
 
+// Global error handling middleware - MUST be after all routes
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+    logError('system', 'Unhandled route error', {
+        error: err.message,
+        stack: err.stack,
+        path: req.path,
+        method: req.method
+    });
+
+    // Don't expose internal errors to clients
+    res.status(500).json({
+        message: 'Internal server error',
+        error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+});
+
+// 404 handler
+app.use((req: Request, res: Response) => {
+    res.status(404).json({ message: 'Not found' });
+});
+
 import { startCleanupJob } from './jobs/cleanup';
 
-app.listen(PORT, async () => {
+// Graceful shutdown handling
+let server: any;
+
+const gracefulShutdown = async (signal: string) => {
+    console.log(`[SHUTDOWN] ${signal} received. Closing server gracefully...`);
+
+    if (server) {
+        server.close(async () => {
+            console.log('[SHUTDOWN] HTTP server closed.');
+
+            // Close database connection
+            await prisma.$disconnect();
+            console.log('[SHUTDOWN] Database connection closed.');
+
+            process.exit(0);
+        });
+
+        // Force close after 10 seconds
+        setTimeout(() => {
+            console.error('[SHUTDOWN] Forced shutdown after timeout');
+            process.exit(1);
+        }, 10000);
+    }
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+server = app.listen(PORT, async () => {
     console.log(`Server running on port ${PORT}`);
     await seedDatabase();
     startCleanupJob();

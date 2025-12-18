@@ -85,3 +85,12 @@ model ApiKey {
   lastUsed  DateTime?
   createdAt DateTime @default(now())
 }
+
+model BackendLog {
+  id        String   @id @default(uuid())
+  level     String   // 'INFO', 'WARN', 'ERROR'
+  source    String   // e.g., 'surveys', 'email', 'auth', 'system'
+  message   String
+  details   String?  // JSON string for additional context
+  createdAt DateTime @default(now())
+}

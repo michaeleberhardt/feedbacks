@@ -20,6 +20,7 @@ import {
     Settings as SettingsIcon,
     ExitToApp as LogoutIcon,
     History as HistoryIcon,
+    Info as InfoIcon,
     Brightness4,
     Brightness7,
 } from '@mui/icons-material';
@@ -54,6 +55,7 @@ const AdminLayout: React.FC = () => {
         { text: 'Templates', icon: <DescriptionIcon />, path: '/admin/templates' },
         { text: 'Settings', icon: <SettingsIcon />, path: '/admin/settings' },
         { text: 'Logs', icon: <HistoryIcon />, path: '/admin/logs' },
+        { text: 'System Info', icon: <InfoIcon />, path: '/admin/info' },
     ];
 
     const handleLogout = () => {

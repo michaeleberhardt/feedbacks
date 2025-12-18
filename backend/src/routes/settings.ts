@@ -1,8 +1,20 @@
 import express from 'express';
 import { prisma } from '../lib/prisma';
 import { authenticateToken, authorizeRole } from '../middleware/auth';
+import fs from 'fs';
+import path from 'path';
 
 const router = express.Router();
+
+// Helper to safely read package.json
+function readPackageJson(filePath: string): Record<string, any> | null {
+    try {
+        const content = fs.readFileSync(filePath, 'utf-8');
+        return JSON.parse(content);
+    } catch {
+        return null;
+    }
+}
 
 // GET all settings
 router.get('/', authenticateToken, authorizeRole('ADMIN'), async (req, res) => {
@@ -61,6 +73,68 @@ router.post('/test-email', authenticateToken, authorizeRole('ADMIN'), async (req
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Failed to send test email' });
+    }
+});
+
+// GET system info (versions)
+router.get('/info', authenticateToken, authorizeRole('ADMIN'), async (req, res) => {
+    try {
+        // Read backend package.json
+        const backendPkg = readPackageJson(path.join(__dirname, '../../package.json'));
+
+        // Get installed versions from node_modules
+        const getInstalledVersion = (pkgName: string): string => {
+            try {
+                const pkgPath = path.join(__dirname, '../../node_modules', pkgName, 'package.json');
+                const pkg = readPackageJson(pkgPath);
+                return pkg?.version || 'unknown';
+            } catch {
+                return 'unknown';
+            }
+        };
+
+        const backend = {
+            node: process.version,
+            express: getInstalledVersion('express'),
+            prisma: getInstalledVersion('@prisma/client'),
+            typescript: getInstalledVersion('typescript'),
+            nodemailer: getInstalledVersion('nodemailer'),
+            helmet: getInstalledVersion('helmet'),
+            jsonwebtoken: getInstalledVersion('jsonwebtoken'),
+            bcryptjs: getInstalledVersion('bcryptjs'),
+            nodeCron: getInstalledVersion('node-cron'),
+        };
+
+        // Frontend versions (from package.json since we can't read node_modules at runtime)
+        const frontendPkgPath = path.join(__dirname, '../../../frontend/package.json');
+        const frontendPkg = readPackageJson(frontendPkgPath);
+
+        const frontend = frontendPkg ? {
+            react: frontendPkg.dependencies?.react?.replace('^', '') || 'unknown',
+            reactDom: frontendPkg.dependencies?.['react-dom']?.replace('^', '') || 'unknown',
+            mui: frontendPkg.dependencies?.['@mui/material']?.replace('^', '') || 'unknown',
+            reactRouter: frontendPkg.dependencies?.['react-router-dom']?.replace('^', '') || 'unknown',
+            axios: frontendPkg.dependencies?.axios?.replace('^', '') || 'unknown',
+            vite: frontendPkg.devDependencies?.vite || 'unknown',
+            typescript: frontendPkg.devDependencies?.typescript?.replace('~', '') || 'unknown',
+        } : null;
+
+        // System info
+        const system = {
+            platform: process.platform,
+            arch: process.arch,
+            uptime: Math.floor(process.uptime()),
+            memoryUsage: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+        };
+
+        res.json({
+            backend,
+            frontend,
+            system
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error fetching system info' });
     }
 });
 

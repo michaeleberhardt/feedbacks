@@ -8,6 +8,9 @@ export interface SystemSettings {
     pass?: string;
     secure?: string; // 'true' or 'false'
     tls_reject?: string; // 'true' or 'false'
+    sender_name?: string;
+    cleanup_enabled?: string; // 'true' or 'false'
+    cleanup_retention_days?: string;
     [key: string]: string | undefined;
 }
 
@@ -47,4 +50,59 @@ export const createApiKey = async (name: string) => {
 
 export const deleteApiKey = async (id: string) => {
     await api.delete(`/api-keys/${id}`);
+};
+
+// Backend Logs
+export interface BackendLog {
+    id: string;
+    level: 'INFO' | 'WARN' | 'ERROR';
+    source: string;
+    message: string;
+    details: string | null;
+    createdAt: string;
+}
+
+export const getBackendLogs = async (params?: { level?: string; source?: string; limit?: number }) => {
+    const response = await api.get<BackendLog[]>('/logs/backend', { params });
+    return response.data;
+};
+
+export const clearOldLogs = async () => {
+    const response = await api.delete('/logs/backend');
+    return response.data;
+};
+
+// System Info
+export interface SystemInfo {
+    backend: {
+        node: string;
+        express: string;
+        prisma: string;
+        typescript: string;
+        nodemailer: string;
+        helmet: string;
+        jsonwebtoken: string;
+        bcryptjs: string;
+        nodeCron: string;
+    };
+    frontend: {
+        react: string;
+        reactDom: string;
+        mui: string;
+        reactRouter: string;
+        axios: string;
+        vite: string;
+        typescript: string;
+    } | null;
+    system: {
+        platform: string;
+        arch: string;
+        uptime: number;
+        memoryUsage: number;
+    };
+}
+
+export const getSystemInfo = async () => {
+    const response = await api.get<SystemInfo>('/settings/info');
+    return response.data;
 };
