@@ -130,11 +130,11 @@ router.get('/', authenticateToken, authorizeRole('ADMIN'), async (req, res) => {
     const where: any = {};
     if (ref) {
         where.OR = [
-            { reference: { contains: String(ref) } },
-            { addresseeEmail: { contains: String(ref) } } // simplistic search
+            { reference: { contains: String(ref), mode: 'insensitive' } },
+            { addresseeEmail: { contains: String(ref), mode: 'insensitive' } }
         ];
     }
-    if (employee) where.employee = { contains: String(employee) };
+    if (employee) where.employee = { contains: String(employee), mode: 'insensitive' };
     if (status && status !== 'all') where.status = String(status);
 
     // Date filter
@@ -175,11 +175,11 @@ router.get('/stats', authenticateToken, authorizeRole('ADMIN'), async (req, res)
     const baseWhere: any = { status: 'answered' };
     if (ref) {
         baseWhere.OR = [
-            { reference: { contains: String(ref) } },
-            { addresseeEmail: { contains: String(ref) } }
+            { reference: { contains: String(ref), mode: 'insensitive' } },
+            { addresseeEmail: { contains: String(ref), mode: 'insensitive' } }
         ];
     }
-    if (employee) baseWhere.employee = { contains: String(employee) };
+    if (employee) baseWhere.employee = { contains: String(employee), mode: 'insensitive' };
 
     try {
         const now = new Date();
