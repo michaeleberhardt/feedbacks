@@ -68,6 +68,7 @@ const Settings: React.FC = () => {
     const [openApiKey, setOpenApiKey] = useState(false);
     const [newKeyName, setNewKeyName] = useState('');
     const [createdKey, setCreatedKey] = useState<string | null>(null);
+    const [copySuccess, setCopySuccess] = useState(false);
 
     useEffect(() => {
         loadSettings();
@@ -159,8 +160,6 @@ const Settings: React.FC = () => {
     const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
         setValue(newValue);
     };
-
-    const [copySuccess, setCopySuccess] = useState(false);
 
     const copyToClipboard = (text: string) => {
         console.log('copyToClipboard called with:', text);

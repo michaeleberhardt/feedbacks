@@ -135,7 +135,8 @@ router.get('/', authenticateToken, authorizeRole('ADMIN'), async (req, res) => {
         conditions.push({
             OR: [
                 { reference: { contains: String(ref) } },
-                { addresseeEmail: { contains: String(ref) } }
+                { addresseeEmail: { contains: String(ref) } },
+                { employee: { contains: String(ref) } }
             ]
         });
     }
@@ -192,7 +193,8 @@ router.get('/stats', authenticateToken, authorizeRole('ADMIN'), async (req, res)
         baseConditions.push({
             OR: [
                 { reference: { contains: String(ref) } },
-                { addresseeEmail: { contains: String(ref) } }
+                { addresseeEmail: { contains: String(ref) } },
+                { employee: { contains: String(ref) } }
             ]
         });
     }

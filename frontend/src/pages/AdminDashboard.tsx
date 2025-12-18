@@ -136,7 +136,7 @@ const AdminDashboard: React.FC = () => {
                     <Box sx={{ flex: 2, width: '100%' }}>
                         <TextField
                             fullWidth
-                            label="Search (Ref, Email)"
+                            label="Search (Ref, Email, Employee)"
                             variant="outlined"
                             value={filterText}
                             onChange={(e) => setFilterText(e.target.value)}

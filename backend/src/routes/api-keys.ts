@@ -36,6 +36,7 @@ router.post('/', authenticateToken, authorizeRole('ADMIN'), async (req, res) => 
         // Return raw key ONLY once
         res.json({ ...apiKey, rawKey });
     } catch (error) {
+        console.error('[API Keys] Error creating key:', error);
         res.status(500).json({ message: 'Error creating API key' });
     }
 });
