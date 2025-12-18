@@ -160,22 +160,43 @@ const Settings: React.FC = () => {
         setValue(newValue);
     };
 
-    const copyToClipboard = async (text: string) => {
+    const copyToClipboard = (text: string) => {
+        // Try modern clipboard API first
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Copied to clipboard!');
+            }).catch(() => {
+                fallbackCopy(text);
+            });
+        } else {
+            fallbackCopy(text);
+        }
+    };
+
+    const fallbackCopy = (text: string) => {
+        // Fallback for HTTP or older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.top = '0';
+        textArea.style.left = '0';
+        textArea.style.width = '2em';
+        textArea.style.height = '2em';
+        textArea.style.padding = '0';
+        textArea.style.border = 'none';
+        textArea.style.outline = 'none';
+        textArea.style.boxShadow = 'none';
+        textArea.style.background = 'transparent';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
         try {
-            await navigator.clipboard.writeText(text);
+            document.execCommand('copy');
             alert('Copied to clipboard!');
         } catch (err) {
-            // Fallback for older browsers or non-HTTPS
-            const textArea = document.createElement('textarea');
-            textArea.value = text;
-            textArea.style.position = 'fixed';
-            textArea.style.left = '-999999px';
-            document.body.appendChild(textArea);
-            textArea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textArea);
-            alert('Copied to clipboard!');
+            alert('Failed to copy. Please copy manually: ' + text);
         }
+        document.body.removeChild(textArea);
     };
 
     return (
