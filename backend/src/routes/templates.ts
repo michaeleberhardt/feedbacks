@@ -18,7 +18,7 @@ router.get('/', authenticateToken, authorizeRole('ADMIN'), async (req, res) => {
 
 // POST create template
 router.post('/', authenticateToken, authorizeRole('ADMIN'), async (req, res) => {
-    const { title, internalName, introText, logoUrl, htmlDesign, questions, emailSubject, emailBody, commentLabel, submitButtonLabel } = req.body;
+    const { title, internalName, introText, logoUrl, htmlDesign, questions, emailSubject, emailBody, commentLabel, submitButtonLabel, thankYouMessage } = req.body;
     try {
         const template = await prisma.template.create({
             data: {
@@ -31,6 +31,7 @@ router.post('/', authenticateToken, authorizeRole('ADMIN'), async (req, res) => 
                 emailBody,
                 commentLabel,
                 submitButtonLabel,
+                thankYouMessage,
                 questions: {
                     create: questions.map((q: string) => ({ text: q }))
                 }
@@ -46,7 +47,7 @@ router.post('/', authenticateToken, authorizeRole('ADMIN'), async (req, res) => 
 // PUT update template
 router.put('/:id', authenticateToken, authorizeRole('ADMIN'), async (req, res) => {
     const { id } = req.params;
-    const { title, internalName, introText, logoUrl, htmlDesign, questions, emailSubject, emailBody, commentLabel, submitButtonLabel } = req.body;
+    const { title, internalName, introText, logoUrl, htmlDesign, questions, emailSubject, emailBody, commentLabel, submitButtonLabel, thankYouMessage } = req.body;
 
     console.log(`[PUT /templates/${id}] Update request received:`, {
         title,
@@ -84,7 +85,7 @@ router.put('/:id', authenticateToken, authorizeRole('ADMIN'), async (req, res) =
             // Update only details
             const updated = await prisma.template.update({
                 where: { id },
-                data: { title, internalName, introText, logoUrl, htmlDesign, emailSubject, emailBody, commentLabel, submitButtonLabel },
+                data: { title, internalName, introText, logoUrl, htmlDesign, emailSubject, emailBody, commentLabel, submitButtonLabel, thankYouMessage },
                 include: { questions: true }
             });
             return res.json(updated);
@@ -107,6 +108,7 @@ router.put('/:id', authenticateToken, authorizeRole('ADMIN'), async (req, res) =
                     emailBody,
                     commentLabel,
                     submitButtonLabel,
+                    thankYouMessage,
                     questions: {
                         create: questions.map((q: string) => ({ text: q }))
                     }
