@@ -44,10 +44,13 @@ router.post('/', authenticateToken, authorizeRole('ADMIN'), async (req, res) => 
 // DELETE key
 router.delete('/:id', authenticateToken, authorizeRole('ADMIN'), async (req, res) => {
     const { id } = req.params;
+    console.log('[API Keys] Deleting key:', id);
     try {
         await prisma.apiKey.delete({ where: { id } });
+        console.log('[API Keys] Key deleted successfully:', id);
         res.json({ message: 'API key deleted' });
     } catch (error) {
+        console.error('[API Keys] Error deleting key:', error);
         res.status(500).json({ message: 'Error deleting API key' });
     }
 });
