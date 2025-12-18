@@ -7,11 +7,28 @@ const router = express.Router();
 
 // POST trigger new survey
 router.post('/', authenticateTokenOrApiKey, async (req, res) => {
-    const { templateId, reference, employee, addresseeEmail } = req.body;
+    const { templateId, templateName, reference, employee, addresseeEmail } = req.body;
+
     try {
+        // Resolve template ID from internal name if provided
+        let resolvedTemplateId = templateId;
+        if (!templateId && templateName) {
+            const template = await prisma.template.findFirst({
+                where: { internalName: templateName }
+            });
+            if (!template) {
+                return res.status(404).json({ message: `Template with internal name '${templateName}' not found` });
+            }
+            resolvedTemplateId = template.id;
+        }
+
+        if (!resolvedTemplateId) {
+            return res.status(400).json({ message: 'Either templateId or templateName is required' });
+        }
+
         const survey = await prisma.survey.create({
             data: {
-                templateId,
+                templateId: resolvedTemplateId,
                 reference,
                 employee,
                 addresseeEmail,
