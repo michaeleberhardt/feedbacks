@@ -7,7 +7,16 @@ const router = express.Router();
 
 // POST trigger new survey
 router.post('/', authenticateTokenOrApiKey, async (req, res) => {
+    // Ensure body exists
+    if (!req.body) {
+        return res.status(400).json({ message: 'Request body is required. Make sure Content-Type is application/json' });
+    }
+
     const { templateId, templateName, reference, employee, addresseeEmail } = req.body;
+
+    if (!addresseeEmail) {
+        return res.status(400).json({ message: 'addresseeEmail is required' });
+    }
 
     try {
         // Resolve template ID from internal name if provided
