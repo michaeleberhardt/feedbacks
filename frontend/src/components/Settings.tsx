@@ -27,6 +27,8 @@ import {
 import { Delete as DeleteIcon, ContentCopy as CopyIcon, Add as AddIcon } from '@mui/icons-material';
 import { getSettings, saveSettings, sendTestEmail, getApiKeys, createApiKey, deleteApiKey, getBackendLogs, clearOldLogs, getSystemInfo } from '../services/settings';
 import type { ApiKey, BackendLog, SystemInfo } from '../services/settings';
+// @ts-ignore - Vite supports importing JSON
+import packageJson from '../../package.json';
 import { getUsers, createUser } from '../services/users';
 import type { User } from '../services/users';
 
@@ -538,24 +540,20 @@ const Settings: React.FC = () => {
                         )}
                     </Paper>
 
-                    {/* Frontend Versions */}
+                    {/* Frontend Versions - read directly from package.json */}
                     <Paper sx={{ p: 3, flex: 1, minWidth: 300 }}>
                         <Typography variant="h6" gutterBottom>Frontend</Typography>
-                        {systemInfo?.frontend ? (
-                            <Table size="small">
-                                <TableBody>
-                                    <TableRow><TableCell>React</TableCell><TableCell sx={{ fontFamily: 'monospace' }}>{systemInfo.frontend.react}</TableCell></TableRow>
-                                    <TableRow><TableCell>React DOM</TableCell><TableCell sx={{ fontFamily: 'monospace' }}>{systemInfo.frontend.reactDom}</TableCell></TableRow>
-                                    <TableRow><TableCell>Material UI</TableCell><TableCell sx={{ fontFamily: 'monospace' }}>{systemInfo.frontend.mui}</TableCell></TableRow>
-                                    <TableRow><TableCell>React Router</TableCell><TableCell sx={{ fontFamily: 'monospace' }}>{systemInfo.frontend.reactRouter}</TableCell></TableRow>
-                                    <TableRow><TableCell>Axios</TableCell><TableCell sx={{ fontFamily: 'monospace' }}>{systemInfo.frontend.axios}</TableCell></TableRow>
-                                    <TableRow><TableCell>Vite</TableCell><TableCell sx={{ fontFamily: 'monospace' }}>{systemInfo.frontend.vite}</TableCell></TableRow>
-                                    <TableRow><TableCell>TypeScript</TableCell><TableCell sx={{ fontFamily: 'monospace' }}>{systemInfo.frontend.typescript}</TableCell></TableRow>
-                                </TableBody>
-                            </Table>
-                        ) : (
-                            <Typography color="text.secondary">Loading...</Typography>
-                        )}
+                        <Table size="small">
+                            <TableBody>
+                                <TableRow><TableCell>React</TableCell><TableCell sx={{ fontFamily: 'monospace' }}>{packageJson.dependencies.react?.replace('^', '')}</TableCell></TableRow>
+                                <TableRow><TableCell>React DOM</TableCell><TableCell sx={{ fontFamily: 'monospace' }}>{packageJson.dependencies['react-dom']?.replace('^', '')}</TableCell></TableRow>
+                                <TableRow><TableCell>Material UI</TableCell><TableCell sx={{ fontFamily: 'monospace' }}>{packageJson.dependencies['@mui/material']?.replace('^', '')}</TableCell></TableRow>
+                                <TableRow><TableCell>React Router</TableCell><TableCell sx={{ fontFamily: 'monospace' }}>{packageJson.dependencies['react-router-dom']?.replace('^', '')}</TableCell></TableRow>
+                                <TableRow><TableCell>Axios</TableCell><TableCell sx={{ fontFamily: 'monospace' }}>{packageJson.dependencies.axios?.replace('^', '')}</TableCell></TableRow>
+                                <TableRow><TableCell>Vite</TableCell><TableCell sx={{ fontFamily: 'monospace' }}>{packageJson.devDependencies?.vite || 'N/A'}</TableCell></TableRow>
+                                <TableRow><TableCell>TypeScript</TableCell><TableCell sx={{ fontFamily: 'monospace' }}>{packageJson.devDependencies?.typescript?.replace('~', '')}</TableCell></TableRow>
+                            </TableBody>
+                        </Table>
                     </Paper>
 
                     {/* System Info */}
