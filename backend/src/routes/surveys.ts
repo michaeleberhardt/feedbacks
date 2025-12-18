@@ -124,31 +124,44 @@ router.post('/:id/retrigger', authenticateToken, async (req, res) => {
 
 // GET list surveys (with filters)
 router.get('/', authenticateToken, authorizeRole('ADMIN'), async (req, res) => {
-    const { ref, employee, status } = req.query;
+    const { ref, employee, status, startDate, endDate } = req.query;
 
-    // Build filter object
-    const where: any = {};
+    console.log('[Surveys GET] Filters:', { ref, employee, status, startDate, endDate });
+
+    // Build filter conditions as an array for AND
+    const conditions: any[] = [];
+
     if (ref) {
-        where.OR = [
-            { reference: { contains: String(ref) } },
-            { addresseeEmail: { contains: String(ref) } }
-        ];
+        conditions.push({
+            OR: [
+                { reference: { contains: String(ref) } },
+                { addresseeEmail: { contains: String(ref) } }
+            ]
+        });
     }
-    if (employee) where.employee = { contains: String(employee) };
-    if (status && status !== 'all') where.status = String(status);
+    if (employee) {
+        conditions.push({ employee: { contains: String(employee) } });
+    }
+    if (status && status !== 'all') {
+        conditions.push({ status: String(status) });
+    }
 
     // Date filter
-    const { startDate, endDate } = req.query;
     if (startDate && endDate) {
-        where.createdAt = {
-            gte: new Date(String(startDate)),
-            lte: new Date(String(endDate))
-        };
+        conditions.push({
+            createdAt: {
+                gte: new Date(String(startDate)),
+                lte: new Date(String(endDate))
+            }
+        });
     } else if (startDate) {
-        where.createdAt = { gte: new Date(String(startDate)) };
+        conditions.push({ createdAt: { gte: new Date(String(startDate)) } });
     } else if (endDate) {
-        where.createdAt = { lte: new Date(String(endDate)) };
+        conditions.push({ createdAt: { lte: new Date(String(endDate)) } });
     }
+
+    const where = conditions.length > 0 ? { AND: conditions } : {};
+    console.log('[Surveys GET] Where clause:', JSON.stringify(where, null, 2));
 
     try {
         const surveys = await prisma.survey.findMany({
@@ -172,14 +185,22 @@ router.get('/', authenticateToken, authorizeRole('ADMIN'), async (req, res) => {
 router.get('/stats', authenticateToken, authorizeRole('ADMIN'), async (req, res) => {
     const { ref, employee } = req.query;
 
-    const baseWhere: any = { status: 'answered' };
+    // Build base conditions
+    const baseConditions: any[] = [{ status: 'answered' }];
+
     if (ref) {
-        baseWhere.OR = [
-            { reference: { contains: String(ref) } },
-            { addresseeEmail: { contains: String(ref) } }
-        ];
+        baseConditions.push({
+            OR: [
+                { reference: { contains: String(ref) } },
+                { addresseeEmail: { contains: String(ref) } }
+            ]
+        });
     }
-    if (employee) baseWhere.employee = { contains: String(employee) };
+    if (employee) {
+        baseConditions.push({ employee: { contains: String(employee) } });
+    }
+
+    const baseWhere = { AND: baseConditions };
 
     try {
         const now = new Date();
@@ -191,15 +212,15 @@ router.get('/stats', authenticateToken, authorizeRole('ADMIN'), async (req, res)
         const [yearStats, quarterStats, monthStats] = await Promise.all([
             prisma.survey.aggregate({
                 _avg: { averageScore: true },
-                where: { ...baseWhere, createdAt: { gte: startYear } }
+                where: { AND: [...baseConditions, { createdAt: { gte: startYear } }] }
             }),
             prisma.survey.aggregate({
                 _avg: { averageScore: true },
-                where: { ...baseWhere, createdAt: { gte: startQuarter } }
+                where: { AND: [...baseConditions, { createdAt: { gte: startQuarter } }] }
             }),
             prisma.survey.aggregate({
                 _avg: { averageScore: true },
-                where: { ...baseWhere, createdAt: { gte: startMonth } }
+                where: { AND: [...baseConditions, { createdAt: { gte: startMonth } }] }
             })
         ]);
 

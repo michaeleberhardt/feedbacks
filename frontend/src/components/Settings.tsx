@@ -160,43 +160,51 @@ const Settings: React.FC = () => {
         setValue(newValue);
     };
 
-    const copyToClipboard = (text: string) => {
-        // Try modern clipboard API first
-        if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(text).then(() => {
-                alert('Copied to clipboard!');
-            }).catch(() => {
-                fallbackCopy(text);
-            });
-        } else {
-            fallbackCopy(text);
-        }
-    };
+    const [copySuccess, setCopySuccess] = useState(false);
 
-    const fallbackCopy = (text: string) => {
-        // Fallback for HTTP or older browsers
-        const textArea = document.createElement('textarea');
-        textArea.value = text;
-        textArea.style.position = 'fixed';
-        textArea.style.top = '0';
-        textArea.style.left = '0';
-        textArea.style.width = '2em';
-        textArea.style.height = '2em';
-        textArea.style.padding = '0';
-        textArea.style.border = 'none';
-        textArea.style.outline = 'none';
-        textArea.style.boxShadow = 'none';
-        textArea.style.background = 'transparent';
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
+    const copyToClipboard = (text: string) => {
+        console.log('copyToClipboard called with:', text);
+
+        // Create a temporary input element
+        const input = document.createElement('input');
+        input.setAttribute('value', text);
+        input.setAttribute('readonly', '');
+        input.style.position = 'absolute';
+        input.style.left = '-9999px';
+        document.body.appendChild(input);
+
+        // Select the text
+        input.select();
+        input.setSelectionRange(0, 99999); // For mobile devices
+
+        let success = false;
         try {
-            document.execCommand('copy');
-            alert('Copied to clipboard!');
+            success = document.execCommand('copy');
+            console.log('execCommand result:', success);
         } catch (err) {
-            alert('Failed to copy. Please copy manually: ' + text);
+            console.error('execCommand failed:', err);
         }
-        document.body.removeChild(textArea);
+
+        document.body.removeChild(input);
+
+        if (success) {
+            setCopySuccess(true);
+            setTimeout(() => setCopySuccess(false), 2000);
+        } else {
+            // Try clipboard API as fallback
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => {
+                    console.log('Clipboard API success');
+                    setCopySuccess(true);
+                    setTimeout(() => setCopySuccess(false), 2000);
+                }).catch((err) => {
+                    console.error('Clipboard API failed:', err);
+                    alert('Copy failed. Please select and copy manually.');
+                });
+            } else {
+                alert('Copy failed. Please select and copy manually.');
+            }
+        }
     };
 
     return (
@@ -369,24 +377,51 @@ const Settings: React.FC = () => {
                             <Alert severity="success" sx={{ mb: 2 }}>
                                 API Key Created! Copy it now, you won't see it again.
                             </Alert>
-                            <Paper variant="outlined" sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2, bgcolor: 'grey.100' }}>
+                            {copySuccess && (
+                                <Alert severity="info" sx={{ mb: 2 }}>
+                                    Copied to clipboard!
+                                </Alert>
+                            )}
+                            <Paper
+                                variant="outlined"
+                                sx={{
+                                    p: 2,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 2,
+                                    bgcolor: 'grey.100',
+                                    cursor: 'pointer',
+                                    '&:hover': { bgcolor: 'grey.200' }
+                                }}
+                                onClick={() => copyToClipboard(createdKey)}
+                            >
                                 <Typography
                                     variant="body1"
                                     sx={{
                                         fontFamily: 'monospace',
                                         fontWeight: 'bold',
                                         wordBreak: 'break-all',
-                                        flex: 1
+                                        flex: 1,
+                                        userSelect: 'all'
                                     }}
                                 >
                                     {createdKey}
                                 </Typography>
                                 <Tooltip title="Copy to clipboard">
-                                    <IconButton onClick={() => copyToClipboard(createdKey)}>
+                                    <IconButton
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            copyToClipboard(createdKey);
+                                        }}
+                                        color={copySuccess ? 'success' : 'default'}
+                                    >
                                         <CopyIcon />
                                     </IconButton>
                                 </Tooltip>
                             </Paper>
+                            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                                Click the key or the copy button to copy
+                            </Typography>
                         </Box>
                     )}
                 </DialogContent>
